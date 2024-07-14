@@ -1,5 +1,0 @@
-Assignment 07 - Do not check Authorization on User when accessing the following endpoints
-
-UsersController
-	- POST: RegisterUser
-	- PUT: ChangeUserPassword

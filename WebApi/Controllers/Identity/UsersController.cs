@@ -15,14 +15,9 @@ public class UsersController : MyBaseController<UsersController>
     [AllowAnonymous]
     public async Task<IActionResult> RegisterUser([FromBody] UserRegistrationRequest userRegistration)
     {
-        var response = await MediatorSender
-            .Send(new UserRegistrationCommand { UserRegistration = userRegistration });
+        var response = await MediatorSender.Send(new UserRegistrationCommand { UserRegistration = userRegistration });
 
-        if (response.IsSuccessful)
-        {
-            return Ok(response);
-        }
-        return BadRequest(response);
+        return response.IsSuccessful ? Ok(response) : BadRequest(response);
     }
 
     [HttpGet("{userId}")]
@@ -30,11 +25,8 @@ public class UsersController : MyBaseController<UsersController>
     public async Task<IActionResult> GetUserById(string userId)
     {
         var response = await MediatorSender.Send(new GetUserByIdQuery { UserId = userId });
-        if (response.IsSuccessful)
-        {
-            return Ok(response);
-        }
-        return NotFound(response);
+
+        return response.IsSuccessful ? Ok(response) : NotFound(response);
     }
 
     [HttpGet]
@@ -42,11 +34,8 @@ public class UsersController : MyBaseController<UsersController>
     public async Task<IActionResult> GetAllUsers()
     {
         var response = await MediatorSender.Send(new GetAllUsersQuery());
-        if (response.IsSuccessful)
-        {
-            return Ok(response);
-        }
-        return NotFound(response);
+
+        return response.IsSuccessful ? Ok(response) : NotFound(response);
     }
 
     [HttpPut]
@@ -54,37 +43,26 @@ public class UsersController : MyBaseController<UsersController>
     public async Task<IActionResult> UpdateUserDetails([FromBody] UpdateUserRequest updateUser)
     {
         var response = await MediatorSender.Send(new UpdateUserCommand { UpdateUser = updateUser });
-        if (response.IsSuccessful)
-        {
-            return Ok(response);
-        }
-        return NotFound(response);
+
+        return response.IsSuccessful ? Ok(response) : NotFound(response);
     }
 
     [HttpPut("change-password")]
     [AllowAnonymous]
     public async Task<IActionResult> ChangeUserPassword([FromBody] ChangePasswordRequest changePassword)
     {
-        var response = await MediatorSender
-            .Send(new ChangeUserPasswordCommand { ChangePassword = changePassword });
-        if (response.IsSuccessful)
-        {
-            return Ok(response);
-        }
-        return NotFound(response);
+        var response = await MediatorSender.Send(new ChangeUserPasswordCommand { ChangePassword = changePassword });
+
+        return response.IsSuccessful ? Ok(response) : NotFound(response);
     }
 
     [HttpPut("change-status")]
     [MustHavePermission(AppFeature.Users, AppAction.Update)]
     public async Task<IActionResult> ChangeUserStatus([FromBody] ChangeUserStatusRequest changeUserStatus)
     {
-        var response = await MediatorSender
-            .Send(new ChangeUserStatusCommand { ChangeUserStatus = changeUserStatus });
-        if (response.IsSuccessful)
-        {
-            return Ok(response);
-        }
-        return NotFound(response);
+        var response = await MediatorSender.Send(new ChangeUserStatusCommand { ChangeUserStatus = changeUserStatus });
+
+        return response.IsSuccessful ? Ok(response) : NotFound(response);
     }
 
     [HttpGet("roles/{userId}")]
@@ -92,23 +70,16 @@ public class UsersController : MyBaseController<UsersController>
     public async Task<IActionResult> GetRoles(string userId)
     {
         var response = await MediatorSender.Send(new GetRolesQuery { UserId = userId });
-        if (response.IsSuccessful)
-        {
-            return Ok(response);
-        }
-        return NotFound(response);
+
+        return response.IsSuccessful ? Ok(response) : NotFound(response);
     }
 
     [HttpPut("user-roles")]
     [MustHavePermission(AppFeature.Users, AppAction.Update)]
     public async Task<IActionResult> UpdateUserRoles([FromBody] UpdateUserRolesRequest updateUserRoles)
     {
-        var response = await MediatorSender
-            .Send(new UpdateUserRolesCommand { UpdateUserRoles = updateUserRoles });
-        if (response.IsSuccessful)
-        {
-            return Ok(response);
-        }
-        return BadRequest(response);
+        var response = await MediatorSender.Send(new UpdateUserRolesCommand { UpdateUserRoles = updateUserRoles });
+
+        return response.IsSuccessful ? Ok(response) : BadRequest(response);
     }
 }

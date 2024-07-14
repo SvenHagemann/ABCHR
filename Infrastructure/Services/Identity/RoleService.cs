@@ -44,7 +44,7 @@ public class RoleService : IRoleService
         if (identityResult.Succeeded)
             return await ResponseWrapper<string>.SuccessAsync("Role created successfully");
 
-        return await ResponseWrapper<string>.FailAsync(GetIdentityResultErrorDescriptions(identityResult));
+        return await ResponseWrapper<string>.FailAsync(identityResult.Errors.Select(x => x.Description).ToList());
     }
 
     public async Task<IResponseWrapper> GetRoleByIdAsync(string roleId)
@@ -89,7 +89,7 @@ public class RoleService : IRoleService
                 if (identityResult.Succeeded)
                     return await ResponseWrapper<string>.SuccessAsync("Role updated successfully");
 
-                return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescriptions(identityResult));
+                return await ResponseWrapper.FailAsync(identityResult.Errors.Select(x => x.Description).ToList());
 
             }
             return await ResponseWrapper.FailAsync("Cannot update Admin role.");
@@ -118,23 +118,11 @@ public class RoleService : IRoleService
                 if (identityResult.Succeeded)
                     return await ResponseWrapper.SuccessAsync("Role successfully deleted.");
 
-                return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescriptions(identityResult));
+                return await ResponseWrapper.FailAsync(identityResult.Errors.Select(x => x.Description).ToList());
             }
             return await ResponseWrapper.FailAsync("Cannot delete Admin role.");
         }
         return await ResponseWrapper.FailAsync("Role does not exist.");
-    }
-
-    private List<string> GetIdentityResultErrorDescriptions(IdentityResult identityResult)
-    {
-        var errorDescriptions = new List<string>();
-
-        foreach (var error in identityResult.Errors)
-        {
-            errorDescriptions.Add(error.Description);
-        }
-
-        return errorDescriptions;
     }
 
     public async Task<IResponseWrapper> GetPermissionsAsync(string roleId)
@@ -157,8 +145,8 @@ public class RoleService : IRoleService
             };
 
             var currentRoleClaims = await GetAllClaimsForRoleAsync(roleId);
-            var allPermissionsNames = allPermissions.Select(p => p.Name).ToList();
             var currentRoleClaimsValues = currentRoleClaims.Select(crc => crc.ClaimValue).ToList();
+            var allPermissionsNames = allPermissions.Select(p => p.Name).ToList();
             var currentlyAssignedRoleClaimsNames = allPermissionsNames.Intersect(currentRoleClaimsValues).ToList();
 
             foreach (var permission in allPermissions)

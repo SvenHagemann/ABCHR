@@ -17,8 +17,7 @@ public class UserService : IUserService
     private readonly IMapper _mapper;
     private readonly ICurrentUserService _currentUserService;
 
-    public UserService(UserManager<ApplicationUser> userManager,
-        RoleManager<ApplicationRole> roleManager, IMapper mapper, ICurrentUserService currentUserService)
+    public UserService(UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, IMapper mapper, ICurrentUserService currentUserService)
     {
         _userManager = userManager;
         _roleManager = roleManager;
@@ -78,14 +77,12 @@ public class UserService : IUserService
 
             return await ResponseWrapper<string>.SuccessAsync("User registered successfully.");
         }
-        return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescriptions(identityResult));
+        return await ResponseWrapper.FailAsync(identityResult.Errors.Select(x => x.Description).ToList());
     }
 
     public async Task<IResponseWrapper> GetAllUsersAsync()
     {
-        var usersInDb = await _userManager
-            .Users
-            .ToListAsync();
+        var usersInDb = await _userManager.Users.ToListAsync();
 
         if (usersInDb.Count > 0)
         {
@@ -105,11 +102,11 @@ public class UserService : IUserService
             userInDb.PhoneNumber = request.PhoneNumber;
 
             var identityResult = await _userManager.UpdateAsync(userInDb);
+
             if (identityResult.Succeeded)
-            {
                 return await ResponseWrapper<string>.SuccessAsync("User details successfully updated.");
-            }
-            return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescriptions(identityResult));
+
+            return await ResponseWrapper.FailAsync(identityResult.Errors.Select(x => x.Description).ToList());
         }
         return await ResponseWrapper.FailAsync("User does not exist.");
     }
@@ -127,7 +124,7 @@ public class UserService : IUserService
             {
                 return await ResponseWrapper<string>.SuccessAsync("User password updated.");
             }
-            return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescriptions(identityResult));
+            return await ResponseWrapper.FailAsync(identityResult.Errors.Select(x => x.Description).ToList());
         }
         return await ResponseWrapper.FailAsync("User does not exist.");
     }
@@ -148,19 +145,9 @@ public class UserService : IUserService
                         : "User de-activated successfully");
             }
             return await ResponseWrapper
-                .FailAsync(GetIdentityResultErrorDescriptions(identityResult));
+                .FailAsync(identityResult.Errors.Select(x => x.Description).ToList());
         }
         return await ResponseWrapper.FailAsync("User does not exist.");
-    }
-
-    private List<string> GetIdentityResultErrorDescriptions(IdentityResult identityResult)
-    {
-        var errorDescriptions = new List<string>();
-        foreach (var error in identityResult.Errors)
-        {
-            errorDescriptions.Add(error.Description);
-        }
-        return errorDescriptions;
     }
 
     public async Task<IResponseWrapper> GetRolesAsync(string userId)
@@ -180,14 +167,7 @@ public class UserService : IUserService
                 };
 
                 if (await _userManager.IsInRoleAsync(userIdDb, role.Name))
-                {
-                    // User is assigned this role.
                     userRoleVM.IsAssignedToUser = true;
-                }
-                else
-                {
-                    userRoleVM.IsAssignedToUser = false;
-                }
 
                 userRolesVM.Add(userRoleVM);
             }
@@ -203,37 +183,33 @@ public class UserService : IUserService
         if (userInDb is not null)
         {
             if (userInDb.Email == AppCredentials.Email)
-            {
                 return await ResponseWrapper.FailAsync("User Roles update not permitted.");
-            }
+
             var currentAssignedRoles = await _userManager.GetRolesAsync(userInDb);
-            var rolesToBeAssigned = request.Roles
-                .Where(role => role.IsAssignedToUser == true)
-                .ToList();
+            var rolesToBeAssigned = request.Roles.Where(role => role.IsAssignedToUser == true).ToList();
 
             var currentLoggedInUser = await _userManager.FindByIdAsync(_currentUserService.UserId);
             if (currentLoggedInUser is null)
-            {
                 return await ResponseWrapper.FailAsync("User does not exist.");
-            }
-
+                
             if (await _userManager.IsInRoleAsync(currentLoggedInUser, AppRoles.Admin))
             {
                 var identityResult1 = await _userManager.RemoveFromRolesAsync(userInDb, currentAssignedRoles);
                 if (identityResult1.Succeeded)
                 {
-                    var identityResult2 = await _userManager
-                        .AddToRolesAsync(userInDb, rolesToBeAssigned.Select(role => role.RoleName));
+                    var identityResult2 = await _userManager.AddToRolesAsync(userInDb, rolesToBeAssigned.Select(role => role.RoleName));
                     if (identityResult2.Succeeded)
-                    {
                         return await ResponseWrapper<string>.SuccessAsync("User Roles Updated Successfully.");
-                    }
-                    return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescriptions(identityResult2));
+
+                    return await ResponseWrapper.FailAsync(identityResult2.Errors.Select(x => x.Description).ToList());
                 }
-                return await ResponseWrapper.FailAsync(GetIdentityResultErrorDescriptions(identityResult1));
+
+                return await ResponseWrapper.FailAsync(identityResult1.Errors.Select(x => x.Description).ToList());
             }
+
             return await ResponseWrapper.FailAsync("User Roles update not permitted.");
         }
+
         return await ResponseWrapper.FailAsync("User does not exist.");
     }
 
