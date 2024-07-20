@@ -145,9 +145,10 @@ public class RoleService : IRoleService
             };
 
             var currentRoleClaims = await GetAllClaimsForRoleAsync(roleId);
-            var currentRoleClaimsValues = currentRoleClaims.Select(crc => crc.ClaimValue).ToList();
-            var allPermissionsNames = allPermissions.Select(p => p.Name).ToList();
-            var currentlyAssignedRoleClaimsNames = allPermissionsNames.Intersect(currentRoleClaimsValues).ToList();
+            var roleClaimsValues_ofGivenRole = currentRoleClaims.Select(crc => crc.ClaimValue).ToList(); // Liste von ClaimValues z.B.: Permissions.Users.Create
+            var roleClaimsValues_all = allPermissions.Select(p => p.Name).ToList(); // Liste von allen PermissionNames z.B.: Permissions.Users.Create
+
+            var currentlyAssignedRoleClaimsNames = roleClaimsValues_all.Intersect(roleClaimsValues_ofGivenRole).ToList();
 
             foreach (var permission in allPermissions)
             {
